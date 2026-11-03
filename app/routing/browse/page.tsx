@@ -1,58 +1,21 @@
 'use client';
 
-import {
-    Flex,
-    Form,
-    FormInstance,
-    Input,
-    notification,
-    Popconfirm,
-    Select,
-    Space,
-    Spin,
-    Table,
-    Tag,
-    Typography
-} from "antd";
+import {Flex, Form, FormInstance, notification, Popconfirm, Space, Spin, Table, Typography} from "antd";
 import {NotificationInstance} from "antd/es/notification/interface";
-import {deleteRoutes, RoutingDto, saveRoutes, useGetRouteSwr} from "@/src/lib/routingApi";
+import {deleteRoutes, saveRoutes, useGetRouteSwr} from "@/src/lib/routingApi";
 import {createStyles} from "antd-style";
 import React, {useState} from "react";
-import {ColumnGroupType, ColumnType} from "antd/es/table";
 import {CloseOutlined, DeleteFilled, EditFilled, LoadingOutlined, SaveOutlined} from "@ant-design/icons";
+import {RoutingMapper} from "../_form/RoutingMapper";
+import {RoutingViewModel} from "../_form/RoutingViewModel";
+import {FormField, RoutingView} from "@/app/routing/_form/RoutingView";
+import {ColumnGroupType, ColumnType} from "antd/es/table";
 
-
-interface Routing {
-    id: string,
-    priority: number,
-    sourceHost: string[],
-    sourcePath: string[],
-    method: string[],
-    destinationHostUri: string
-}
-
-function mapFromDto(dto: RoutingDto): Routing {
-    return {
-        ...dto,
-        sourceHost: dto.sourceHost?.split(","),
-        sourcePath: dto.sourcePath?.split(","),
-        method: dto.method?.split(",")
-    };
-}
-
-function mapToDto(record: Routing): RoutingDto {
-    return {
-        ...record,
-        sourceHost: record.sourceHost?.join(","),
-        sourcePath: record.sourcePath?.join(","),
-        method: record.method?.join(",")
-    }
-}
 
 function save(recordId: string, form: FormInstance, setEditingKey: React.Dispatch<React.SetStateAction<string>>, notificationApi: NotificationInstance) {
     form.validateFields()
         .then(record => {
-            const dto = mapToDto(record as Routing);
+            const dto = RoutingMapper.mapToDto(record as RoutingViewModel);
             return saveRoutes([{...dto, id: recordId}], notificationApi);
         })
         .then(() => setEditingKey(''));
@@ -75,173 +38,90 @@ const useStyles = createStyles((props) => {
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
-    dataIndex: string;
-    title: string;
-    inputType: 'input' | 'select';
-    inputProps: object,
-    required: boolean;
-    record: Routing;
-    index: number;
+    view: FormField;
+    value: unknown;
 }
 
 const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = (props) => {
-    const {editing, dataIndex, title, inputType, inputProps, required, record, index, children, ...restProps} = props;
-
-    let inputNode = <></>;
-    if (inputType === 'input') {
-        inputNode = <Input {...inputProps}/>;
-    } else if (inputType === 'select') {
-        inputNode = <Select {...inputProps}/>;
+    const {editing, view, value, children, ...restProps} = props;
+    let element;
+    if (editing) {
+        const [formItemProps, inputElement] = view.renderForm();
+        const tableFormItemProps = {...formItemProps, label: null}
+        element = <Form.Item {...tableFormItemProps}>{inputElement}</Form.Item>;
+    } else {
+        if (view) {
+            element = view.renderReadOnly(value);
+        } else {
+            element = children
+        }
     }
-
-    return (
-        <td {...restProps}>
-            {editing ? (
-                <Form.Item
-                    name={dataIndex}
-                    style={{margin: 0}}
-                    rules={[{required: required, message: `Please Input ${title}!`}]}
-                >
-                    {inputNode}
-                </Form.Item>
-            ) : (
-                children
-            )}
-        </td>
-    );
+    return <td {...restProps}>{element}</td>
 };
 
-
-function getTagsList(values: string[]) {
-    return <Flex gap="small" align="center" wrap>
-        {values?.map((value, index) => <Tag key={index}>{value}</Tag>)}
-    </Flex>;
-}
-
 function getColumns(form: FormInstance,
-                    isEditing: (record: Routing) => boolean,
+                    isEditing: (record: RoutingViewModel) => boolean,
                     setEditingKey: React.Dispatch<React.SetStateAction<string>>,
-                    notificationApi: NotificationInstance) {
-    return [
-        {
-            title: "Priority",
-            dataIndex: "priority",
-            sorter: (a: Routing, b: Routing) => a.priority - b.priority,
-            defaultSortOrder: 'ascend',
-            editable: true,
-            inputType: 'input',
-            inputProps: {mode: "spinner", min: "1"}
-        },
-        {
-            title: "Incoming host",
-            dataIndex: "sourceHost",
-            ellipsis: true,
-            editable: true,
-            inputType: 'select',
-            inputProps: {
-                placeholder: "example.com, ...",
-                mode: "tags",
-                tokenSeparators: [","],
-                maxTagCount: "responsive",
-                notFoundContent: null
-            },
-            render: (_, record: Routing) => getTagsList(record.sourceHost)
-        },
-        {
-            title: "Incoming path",
-            dataIndex: "sourcePath",
-            ellipsis: true,
-            editable: true,
-            inputType: 'select',
-            inputProps: {
-                placeholder: "/mypah...",
-                mode: "tags",
-                tokenSeparators: [","],
-                maxTagCount: "responsive",
-                notFoundContent: null
-            },
-            render: (_, record: Routing) => getTagsList(record.sourcePath)
-        },
-        {
-            title: "Http method",
-            dataIndex: "method",
-            ellipsis: true,
-            editable: true,
-            inputType: 'select',
-            inputProps: {
-                placeholder: "Select a http method",
-                mode: "multiple",
-                tokenSeparators: [","],
-                options: [
-                    {label: 'GET', value: 'GET'},
-                    {label: 'POST', value: 'POST'},
-                    {label: 'PATCH', value: 'PATCH'}
-                ]
-            },
-            render: (_, record: Routing) => getTagsList(record.method)
-        },
-        {
-            title: "Outgoing URL",
-            dataIndex: "destinationHostUri",
-            ellipsis: true,
-            editable: true,
-            inputType: 'input',
-            inputProps: {}
-        },
-        {
-            title: 'operation',
-            dataIndex: 'operation',
-            render: (_: unknown, record: Routing) => {
-                const editable = isEditing(record);
-                return editable ? (
-                    <Space size="medium">
-                        <Typography.Link onClick={() => save(record.id, form, setEditingKey, notificationApi)}
-                                         style={{marginInlineEnd: 8}}>
-                            <SaveOutlined/>
-                        </Typography.Link>
-                        <Typography.Link onClick={() => setEditingKey('')}>
-                            <CloseOutlined/>
-                        </Typography.Link>
-                    </Space>
-                ) : (
-                    <Space size="medium">
-                        <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.id, notificationApi)}>
-                            <a><DeleteFilled/></a>
-                        </Popconfirm>
-                        <Typography.Link onClick={() => {
-                            form.setFieldsValue(record);
-                            setEditingKey(record.id);
-                        }}>
-                            <EditFilled/>
-                        </Typography.Link>
-                    </Space>
-                );
-            },
-        },
-    ];
-}
+                    notificationApi: NotificationInstance): (ColumnType<RoutingViewModel> | ColumnGroupType<RoutingViewModel>)[] {
 
-function getMergedColumns(form: FormInstance,
-                          isEditing: (record: Routing) => boolean,
-                          setEditingKey: React.Dispatch<React.SetStateAction<string>>,
-                          notificationApi: NotificationInstance): (ColumnType<Routing> | ColumnGroupType<Routing>)[] {
-    return getColumns(form, isEditing, setEditingKey, notificationApi).map(col => {
-        if (!col.editable) {
-            return col as unknown as ColumnType<Routing>;
-        }
+    const routingViews = RoutingView.formFields.map(field => {
         return {
-            ...col,
-            onCell: (record: Routing) => ({
-                record,
-                dataIndex: col.dataIndex,
-                inputType: col.inputType,
-                inputProps: col.inputProps,
-                title: col.title,
-                required: false,
-                editing: isEditing(record),
-            }),
-        } as unknown as ColumnGroupType<Routing>;
-    })
+            title: field.label,
+            dataIndex: field.name,
+            editable: true,
+            view: field,
+        };
+    });
+    routingViews.push({
+        title: 'Operation',
+        dataIndex: 'operation',
+        editable: false,
+        view: FormField.EMPTY
+    });
+
+    return routingViews.map(col => {
+        if (col.dataIndex === "operation") {
+            return {
+                ...col,
+                render: (_: unknown, record: RoutingViewModel) => {
+                    const editable = isEditing(record);
+                    return editable ? (
+                        <Space size="medium">
+                            <Typography.Link onClick={() => save(record.id, form, setEditingKey, notificationApi)}
+                                             style={{marginInlineEnd: 8}}>
+                                <SaveOutlined/>
+                            </Typography.Link>
+                            <Typography.Link onClick={() => setEditingKey('')}>
+                                <CloseOutlined/>
+                            </Typography.Link>
+                        </Space>
+                    ) : (
+                        <Space size="medium">
+                            <Popconfirm title="Sure to delete?"
+                                        onConfirm={() => handleDelete(record.id, notificationApi)}>
+                                <a><DeleteFilled/></a>
+                            </Popconfirm>
+                            <Typography.Link onClick={() => {
+                                form.setFieldsValue(record);
+                                setEditingKey(record.id);
+                            }}>
+                                <EditFilled/>
+                            </Typography.Link>
+                        </Space>
+                    );
+                }
+            } as unknown as ColumnGroupType<RoutingViewModel>
+        } else {
+            return {
+                ...col,
+                onCell: (routingViewModel: RoutingViewModel) => ({
+                    editing: col.editable && isEditing(routingViewModel),
+                    view: col.view,
+                    value: new Map(Object.entries(routingViewModel)).get(col.dataIndex)
+                })
+            } as ColumnType<RoutingViewModel>;
+        }
+    });
 }
 
 const handleDelete = (id: string, notificationApi: NotificationInstance) => {
@@ -256,7 +136,7 @@ export default function BrowseRouting() {
     const {data, isLoading} = useGetRouteSwr();
     const [editingKey, setEditingKey] = useState('');
 
-    const isEditing = (record: Routing) => record.id === editingKey;
+    const isEditing = (record: RoutingViewModel) => record.id === editingKey;
 
     return isLoading ? (
         <Flex className={"mt-5"} align="center" justify="center" gap="medium">
@@ -266,12 +146,12 @@ export default function BrowseRouting() {
         <>
             {contextHolder}
             <Form form={form} component={false}>
-                <Table<Routing>
+                <Table<RoutingViewModel>
                     bordered
                     components={{body: {cell: EditableCell}}}
-                    dataSource={data?.data.map(value => mapFromDto(value))}
+                    dataSource={data?.data.map(value => RoutingMapper.mapFromDto(value))}
                     rowKey={record => record.id}
-                    columns={getMergedColumns(form, isEditing, setEditingKey, notificationApi)}
+                    columns={getColumns(form, isEditing, setEditingKey, notificationApi)}
                     rowClassName={() => styles.editableRow}
                     pagination={{onChange: () => setEditingKey('')}}
                     className={"m-4"}
