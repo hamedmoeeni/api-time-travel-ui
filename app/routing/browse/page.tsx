@@ -1,11 +1,18 @@
 'use client';
 
-import {Flex, Form, FormInstance, notification, Popconfirm, Space, Spin, Table, Typography} from "antd";
+import {Flex, Form, FormInstance, notification, Popconfirm, Space, Spin, Table, Typography, Button} from "antd";
 import {NotificationInstance} from "antd/es/notification/interface";
 import {deleteRoutes, saveRoutes, useGetRouteSwr} from "@/src/lib/routingApi";
 import {createStyles} from "antd-style";
 import React, {useState} from "react";
-import {CloseOutlined, DeleteFilled, EditFilled, LoadingOutlined, SaveOutlined} from "@ant-design/icons";
+import {
+    CloseOutlined,
+    DeleteFilled,
+    EditFilled,
+    LoadingOutlined,
+    SaveOutlined,
+    DeleteOutlined
+} from "@ant-design/icons";
 import {RoutingMapper} from "../_form/RoutingMapper";
 import {RoutingViewModel} from "../_form/RoutingViewModel";
 import {FormField, RoutingView} from "@/app/routing/_form/RoutingView";
@@ -24,6 +31,17 @@ function save(recordId: string, form: FormInstance, setEditingKey: React.Dispatc
 const useStyles = createStyles((props) => {
     const {css, prefixCls, cssVar} = props;
     return {
+        customTable: css`
+            ${prefixCls}-table {
+                ${prefixCls}-table-container {
+                    ${prefixCls}-table-body,
+                    ${prefixCls}-table-content {
+                        scrollbar-width: thin;
+                        scrollbar-color: #eaeaea transparent;
+                    }
+                }
+            }
+        `,
         editableRow: css`
             position: relative;
 
@@ -83,6 +101,7 @@ function getColumns(form: FormInstance,
         if (col.dataIndex === "operation") {
             return {
                 ...col,
+                fixed: "end",
                 render: (_: unknown, record: RoutingViewModel) => {
                     const editable = isEditing(record);
                     return editable ? (
@@ -112,8 +131,12 @@ function getColumns(form: FormInstance,
                 }
             } as unknown as ColumnGroupType<RoutingViewModel>
         } else {
+            let modifiedCol = {...col};
+            if (col.dataIndex === "priority") {
+                modifiedCol = {...col, width: "10rem"};
+            }
             return {
-                ...col,
+                ...modifiedCol,
                 onCell: (routingViewModel: RoutingViewModel) => ({
                     editing: col.editable && isEditing(routingViewModel),
                     view: col.view,
@@ -135,6 +158,7 @@ export default function BrowseRouting() {
     const [form] = Form.useForm();
     const {data, isLoading} = useGetRouteSwr();
     const [editingKey, setEditingKey] = useState('');
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
     const isEditing = (record: RoutingViewModel) => record.id === editingKey;
 
@@ -145,18 +169,35 @@ export default function BrowseRouting() {
     ) : (
         <>
             {contextHolder}
-            <Form form={form} component={false}>
-                <Table<RoutingViewModel>
-                    bordered
-                    components={{body: {cell: EditableCell}}}
-                    dataSource={data?.data.map(value => RoutingMapper.mapFromDto(value))}
-                    rowKey={record => record.id}
-                    columns={getColumns(form, isEditing, setEditingKey, notificationApi)}
-                    rowClassName={() => styles.editableRow}
-                    pagination={{onChange: () => setEditingKey('')}}
-                    className={"m-4"}
-                />
-            </Form>
+            <Flex vertical gap="medium">
+                <div className={"ms-4 mt-4"}>
+                    <Flex gap="small">
+                        <Popconfirm title="Sure to delete?"
+                                    onConfirm={() => deleteRoutes(selectedRowKeys.map(value => value.toString()), notificationApi)}>
+                            <Button type="primary" icon={<DeleteOutlined/>}
+                                    disabled={selectedRowKeys.length == 0}>
+                                Delete
+                            </Button>
+                        </Popconfirm>
+
+                    </Flex>
+                </div>
+                <div className={"m-4 mt-0"}>
+                    <Form form={form} component={false}>
+                        <Table<RoutingViewModel>
+                            bordered
+                            components={{body: {cell: EditableCell}}}
+                            dataSource={data?.data.map(value => RoutingMapper.mapFromDto(value))}
+                            rowKey={record => record.id}
+                            columns={getColumns(form, isEditing, setEditingKey, notificationApi)}
+                            rowClassName={() => styles.editableRow}
+                            pagination={{onChange: () => setEditingKey('')}}
+                            rowSelection={{selectedRowKeys, onChange: (selected) => setSelectedRowKeys(selected)}}
+                            scroll={{x: 'max-content'}}
+                        />
+                    </Form>
+                </div>
+            </Flex>
         </>
     );
 }

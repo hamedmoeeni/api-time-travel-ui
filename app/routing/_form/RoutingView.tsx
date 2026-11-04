@@ -49,7 +49,7 @@ export class FormField {
 export class RoutingView {
     static formFields: FormField[] = [
         new FormField("Priority", "priority", "number",
-            {placeholder: "1, 2, ...", min: 1},
+            {placeholder: "1, 2, ...", min: 1, style: {"width":"10rem"}},
             [{required: true, message: 'Please input priority'}]
         ),
         new FormField('Source host', "sourceHost", 'tags',
