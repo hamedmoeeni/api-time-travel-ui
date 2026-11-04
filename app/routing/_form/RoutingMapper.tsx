@@ -1,5 +1,6 @@
-import {RoutingDto} from "@/src/lib/routingApi";
+
 import {RoutingViewModel} from "./RoutingViewModel";
+import {RoutingDto} from "@/src/lib/routing/RoutingRestApi";
 
 
 export class RoutingMapper {
