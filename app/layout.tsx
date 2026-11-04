@@ -17,6 +17,11 @@ import Link from "next/link";
 import {MenuItemType, SubMenuType} from "antd/lib/menu/interface";
 import {BreadcrumbItemType} from "antd/lib/breadcrumb/Breadcrumb";
 import SkeletonInput from "antd/es/skeleton/Input";
+import {getNotificationServiceImpl} from "@/src/lib/antdimpls/AntdNotificationServiceImpl";
+import {LayoutPropsContext} from "./context";
+import {RoutingRestApi} from "@/src/lib/RoutingRestApi";
+import {RestApi} from "@/src/lib/rest/RestApi";
+import {AxiosRestApiImpl} from "@/src/lib/axiosimpls/AxiosRestApiImpl";
 
 
 const {Header, Content, Footer, Sider} = Layout;
@@ -76,6 +81,13 @@ function getMenuOpenKeys(pathName: string) {
 }
 
 export default function RootLayout({children}: React.PropsWithChildren) {
+    const [notificationService, contextHolder] = getNotificationServiceImpl();
+    const restApi: RestApi = new AxiosRestApiImpl();
+    const layoutProps = {
+        notificationService: notificationService,
+        routingRestApi: new RoutingRestApi(restApi)
+    };
+
     return (
         <html lang="en">
         <body>
@@ -91,7 +103,7 @@ export default function RootLayout({children}: React.PropsWithChildren) {
                 },
                 components: {
                     Menu: {
-                        itemBg:"#00000000"
+                        itemBg: "#00000000"
                     }
                 }
             }}>
@@ -111,7 +123,12 @@ export default function RootLayout({children}: React.PropsWithChildren) {
                             <Space size="large" className={"m-4"}>
                                 <Breadcrumb items={getBreadcrumbItems(menuItems, usePathname())}/>
                             </Space>
-                            <AntdRegistry>{children}</AntdRegistry>
+                            <AntdRegistry>
+                                <LayoutPropsContext.Provider value={layoutProps}>
+                                    {contextHolder}
+                                    {children}
+                                </LayoutPropsContext.Provider>
+                            </AntdRegistry>
                         </Content>
                         <Footer>
                             API Time Travel UI 1.0.0

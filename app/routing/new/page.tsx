@@ -1,39 +1,40 @@
 'use client';
 
-import {Button, Form, notification} from "antd";
+import {Button, Form} from "antd";
 import {redirect} from "next/navigation";
-import {NotificationInstance} from "antd/es/notification/interface";
 import {isRedirectError} from "next/dist/client/components/redirect-error";
-import {RoutingDto, saveRoutes} from "@/src/lib/routingApi";
+import {RoutingDto} from "@/src/lib/RoutingRestApi";
 import {RoutingView} from "@/app/routing/_form/RoutingView";
 import {RoutingViewModel} from "@/app/routing/_form/RoutingViewModel";
 import {RoutingMapper} from "@/app/routing/_form/RoutingMapper";
+import {useContext} from "react";
+import {LayoutPropsContext} from "@/app/context";
 
-function handleSave(value: RoutingViewModel, notificationApi: NotificationInstance) {
-    const routing: RoutingDto = RoutingMapper.mapToDto(value);
-    saveRoutes([routing], notificationApi)
-        .then(() => {
-            redirect("/routing/browse");
-        }).catch(error => {
-        if (isRedirectError(error)) { // Redirect error handle here
-            throw error // You have to throw the redirect error
-        }
-    });
-}
 
 export default function NewRouting() {
-    const [notificationApi, contextHolder] = notification.useNotification();
+    const {notificationService,routingRestApi} = useContext(LayoutPropsContext);
+
+    function handleSave(value: RoutingViewModel) {
+        const routing: RoutingDto = RoutingMapper.mapToDto(value);
+        routingRestApi.saveRoutes([routing], notificationService)
+            .then(() => {
+                redirect("/routing/browse");
+            }).catch(error => {
+            if (isRedirectError(error)) { // Redirect error handle here
+                throw error // You have to throw the redirect error
+            }
+        });
+    }
 
     return (
         <>
-            {contextHolder}
             <Form
                 name="basic"
                 labelCol={{span: 8}}
                 wrapperCol={{span: 16}}
                 style={{maxWidth: 600}}
                 initialValues={{remember: true}}
-                onFinish={(value) => handleSave(value, notificationApi)}
+                onFinish={(value) => handleSave(value)}
                 autoComplete="off"
             >
                 {RoutingView.formFields.map(value => {

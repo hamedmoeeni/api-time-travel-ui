@@ -1,4 +1,4 @@
-import {RoutingDto} from "@/src/lib/routingApi";
+import {RoutingDto} from "@/src/lib/RoutingRestApi";
 import {RoutingViewModel} from "./RoutingViewModel";
 
 
