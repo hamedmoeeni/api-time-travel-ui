@@ -58,8 +58,8 @@ export class AxiosRestApiImpl implements RestApi {
         throw error;
     }
 
-    get<T>(url: string,): Promise<T> {
-        return this.api.get(url).then((response: AxiosResponse) => response.data);
+    get<T>(url: string, params: unknown): Promise<T> {
+        return this.api.get(url, {params: params}).then((response: AxiosResponse) => response.data);
     }
 
 

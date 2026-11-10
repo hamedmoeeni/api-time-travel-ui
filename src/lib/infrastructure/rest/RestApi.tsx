@@ -3,5 +3,5 @@ export interface RestApi {
 
     deleteApi<T>(path: string, body: unknown, notificationService: NotificationService): Promise<void | T>
 
-    get<T>(url: string): Promise<void | T>;
+    get<T>(url: string,params:unknown): Promise<void | T>;
 }

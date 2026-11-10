@@ -21,7 +21,8 @@ import {LayoutPropsContext} from "./context";
 import {getNotificationServiceImpl} from "@/src/lib/infrastructure/antdimpls/AntdNotificationServiceImpl";
 import {AxiosRestApiImpl} from "@/src/lib/infrastructure/axiosimpls/AxiosRestApiImpl";
 import {RestApi} from "@/src/lib/infrastructure/rest/RestApi";
-import {RoutingRestApi} from "@/src/lib/routing/RoutingRestApi";
+import {RoutingRestApi} from "@/src/lib/rest/routing/RoutingRestApi";
+import {RecordingRestApi} from "@/src/lib/rest/recording/RecordingRestApi";
 
 
 const {Header, Content, Footer, Sider} = Layout;
@@ -85,7 +86,8 @@ export default function RootLayout({children}: React.PropsWithChildren) {
     const restApi: RestApi = new AxiosRestApiImpl();
     const layoutProps = {
         notificationService: notificationService,
-        routingRestApi: new RoutingRestApi(restApi)
+        routingRestApi: new RoutingRestApi(restApi),
+        recordingRestApi: new RecordingRestApi(restApi)
     };
 
     return (

@@ -18,7 +18,7 @@ import {LayoutPropsContext} from "@/app/context";
 import {FormField} from "@/src/lib/infrastructure/form/FormField";
 import {RoutingView} from "@/app/routing/_form/RoutingView";
 import {AntdFormField} from "@/src/lib/infrastructure/antdimpls/AntdFormField";
-import {RoutingDto} from "@/src/lib/routing/RoutingRestApi";
+import {RoutingDto} from "@/src/lib/rest/routing/RoutingRestApi";
 
 
 export default function BrowseRouting() {

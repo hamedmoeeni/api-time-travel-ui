@@ -8,7 +8,7 @@ import {RoutingViewModel} from "@/app/routing/_form/RoutingViewModel";
 import {RoutingMapper} from "@/app/routing/_form/RoutingMapper";
 import {useContext} from "react";
 import {LayoutPropsContext} from "@/app/context";
-import {RoutingDto} from "@/src/lib/routing/RoutingRestApi";
+import {RoutingDto} from "@/src/lib/rest/routing/RoutingRestApi";
 
 
 export default function NewRouting() {
