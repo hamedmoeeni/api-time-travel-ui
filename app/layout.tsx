@@ -1,7 +1,7 @@
 'use client';
 
 import {AntdRegistry} from '@ant-design/nextjs-registry';
-import {Breadcrumb, ConfigProvider, Layout, Menu, Space, theme} from "antd";
+import {Breadcrumb, ConfigProvider, Flex, Layout, Menu, Space, theme} from "antd";
 import "./globals.css"
 import React, {Suspense} from "react";
 import {
@@ -23,6 +23,7 @@ import {AxiosRestApiImpl} from "@/src/lib/infrastructure/axiosimpls/AxiosRestApi
 import {RestApi} from "@/src/lib/infrastructure/rest/RestApi";
 import {RoutingRestApi} from "@/src/lib/rest/routing/RoutingRestApi";
 import {RecordingRestApi} from "@/src/lib/rest/recording/RecordingRestApi";
+import {StatsApi} from "@/src/lib/rest/stats/StatsApi";
 
 
 const {Header, Content, Footer, Sider} = Layout;
@@ -87,7 +88,8 @@ export default function RootLayout({children}: React.PropsWithChildren) {
     const layoutProps = {
         notificationService: notificationService,
         routingRestApi: new RoutingRestApi(restApi),
-        recordingRestApi: new RecordingRestApi(restApi)
+        recordingRestApi: new RecordingRestApi(restApi),
+        statsApi: new StatsApi(restApi)
     };
 
     return (
@@ -121,16 +123,16 @@ export default function RootLayout({children}: React.PropsWithChildren) {
                         <Header>
 
                         </Header>
-                        <Content>
-                            <Space size="large" className={"m-4"}>
+                        <Content className={"p-2"}>
+                            <Flex vertical gap="medium">
                                 <Breadcrumb items={getBreadcrumbItems(menuItems, usePathname())}/>
-                            </Space>
-                            <AntdRegistry>
-                                <LayoutPropsContext.Provider value={layoutProps}>
-                                    {contextHolder}
-                                    {children}
-                                </LayoutPropsContext.Provider>
-                            </AntdRegistry>
+                                <AntdRegistry>
+                                    <LayoutPropsContext.Provider value={layoutProps}>
+                                        {contextHolder}
+                                        {children}
+                                    </LayoutPropsContext.Provider>
+                                </AntdRegistry>
+                            </Flex>
                         </Content>
                         <Footer>
                             API Time Travel UI 1.0.0

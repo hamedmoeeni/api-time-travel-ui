@@ -20,7 +20,7 @@ export class RoutingRestApi {
     useSwrGetRoute() {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         return useSWR(process.env.NEXT_PUBLIC_API_PATH_ROUTES, () => {
-            return this.restApi.get<RoutingDto[]>(process.env.NEXT_PUBLIC_API_PATH_ROUTES as string);
+            return this.restApi.get<RoutingDto[]>(process.env.NEXT_PUBLIC_API_PATH_ROUTES as string, null);
         });
     }
 
